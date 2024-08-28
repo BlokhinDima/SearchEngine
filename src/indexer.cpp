@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string>
 #include <algorithm>
+#include <regex>
 
 #include "indexer.h"
 #include "boost/algorithm/string.hpp"
@@ -11,7 +12,8 @@ namespace indexers
 	std::string Indexer::indexPage(const std::string& url, std::string& htmlText)
 	{
 		auto formattedText = formatText(htmlText);
-		conutWords(formattedText);
+		auto wordsCount = conutWords(formattedText);
+		saveToDatabase(url, wordsCount);
 		return formattedText;
 	}
 
@@ -87,5 +89,21 @@ namespace indexers
 		}
 
 		return wordsCount;
+	}
+
+	void Indexer::saveToDatabase(const std::string& url, WordsCount& wordsCount)
+	{
+		auto urlId = database.addUrl(url)[0][0].as<std::string>();
+		std::cout << "ID " << urlId << std::endl;
+
+		for (const auto& pair : wordsCount)
+		{
+			auto word = pair.first;
+			auto count = pair.second;
+			std::cout << word << std::endl;
+			std::cout << count << std::endl;
+			auto wordId = database.addWord(word)[0][0].as<std::string>();
+			database.addUrlWordCount(urlId, wordId, std::to_string(count));
+		}
 	}
 }

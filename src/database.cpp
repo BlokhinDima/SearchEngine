@@ -28,7 +28,7 @@ namespace databases
 	{
 		createDocumentsTable();
 		createWordsTable();
-		createDocumentsWordsCountTable();
+		createLinksWordsCountTable();
 	}
 	
 
@@ -37,10 +37,9 @@ namespace databases
 		try
 		{
 			std::string query =
-				"CREATE TABLE IF NOT EXISTS documents"
+				"CREATE TABLE IF NOT EXISTS links"
 				"(id SERIAL primary key, "
-				"link VARCHAR(2048), "
-				"page_text TEXT);";
+				"link VARCHAR(2048));";
 
 			pqxx::transaction tx{ *conn };
 			tx.exec(query);
@@ -73,19 +72,82 @@ namespace databases
 	}
 
 
-	void SearchDatabase::createDocumentsWordsCountTable()
+	void SearchDatabase::createLinksWordsCountTable()
 	{
 		try
 		{
 			std::string query =
-				"CREATE TABLE IF NOT EXISTS documents_words_count"
-				"(document_id integer references documents(id) ON DELETE CASCADE, "
+				"CREATE TABLE IF NOT EXISTS links_words_count"
+				"(link_id integer references links(id) ON DELETE CASCADE, "
 				"word_id integer references words(id), "
 				"word_count integer not null, "
-				"constraint documents_words_pk primary key (document_id, word_id) );";
+				"constraint links_words_pk primary key (link_id, word_id) );";
 
 			pqxx::transaction tx{ *conn };
 			tx.exec(query);
+			tx.commit();
+		}
+		catch (const std::exception& e)
+		{
+			throw e;
+		}
+	}
+
+
+	pqxx::result SearchDatabase::addUrl(const std::string& url)
+	{
+		try
+		{
+			pqxx::transaction tx{ *conn };
+
+			std::string query =
+				"INSERT INTO links (id, link)"
+				"VALUES (DEFAULT, '" + tx.esc(url) + "') RETURNING id; ";
+
+			pqxx::result result = tx.exec(query);
+			tx.commit();
+			return result;
+		}
+		catch (const std::exception& e)
+		{
+			std::cout << e.what();
+			throw e;
+		}
+	}
+
+
+	pqxx::result SearchDatabase::addWord(const std::string& word)
+	{
+		try
+		{
+			pqxx::transaction tx{ *conn };
+
+			std::string query =
+				"INSERT INTO words (id, word)"
+				"VALUES (DEFAULT, '" + tx.esc(word) +"') RETURNING id; ";
+
+			pqxx::result result = tx.exec(query);
+			tx.commit();
+			return result;
+		}
+		catch (const std::exception& e)
+		{
+			throw e;
+		}
+	}
+
+	
+	void SearchDatabase::addUrlWordCount(const std::string& urlId, const std::string& wordId, const std::string& wordCount)
+	{
+		try
+		{
+			pqxx::transaction tx{ *conn };
+
+			std::string query =
+				"INSERT INTO links_words_count (link_id, word_id, word_count)"
+				"VALUES ('" + tx.esc(urlId) + "', '" + tx.esc(wordId) + "', '" + tx.esc(wordCount) + "'); ";
+
+			pqxx::result result = tx.exec(query);
 			tx.commit();
 		}
 		catch (const std::exception& e)

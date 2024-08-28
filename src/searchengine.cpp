@@ -8,6 +8,8 @@ namespace search_engines
 		std::cout << *config;
 		setDatabaseConnectionData(*config);
 		database = new databases::SearchDatabase(connectionData);
+		indexer = new indexers::Indexer(*database);
+		crawler = new crawlers::Crawler(*indexer);
 	}
 
 
@@ -15,13 +17,15 @@ namespace search_engines
 	{
 		delete config;
 		delete database;
+		delete indexer;
+		delete crawler;
 	}
 
 
 	void SearchEngine::run()
 	{
 		auto engine_settings = config->getEngineSettings();
-		auto result = crawler.downloadWebPage(engine_settings.startPage);
+		auto result = crawler->downloadWebPage(engine_settings.startPage);
 		std::cout << result;
 	}
 

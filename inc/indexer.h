@@ -12,12 +12,11 @@ namespace indexers
 	class Indexer
 	{
 	public:
-		Indexer() {};
-		//Indexer(databases::SearchDatabase& database) : database(database) {};
+		Indexer(databases::SearchDatabase& database) : database(database) {};
 		std::string indexPage(const std::string& url, std::string& htmlText);
 
 	private:
-		//databases::SearchDatabase& database;
+		databases::SearchDatabase& database;
 		std::string formatText(std::string& text);
 		std::string removeHTMLTags(std::string& htmlText);
 		void removeTabs(std::string& text);
@@ -26,5 +25,6 @@ namespace indexers
 		void removeExtraSpaces(std::string& text);
 		void removePunctuationMarks(std::string& text);
 		WordsCount conutWords(std::string& text);
+		void saveToDatabase(const std::string& url, WordsCount& wordsCount);
 	};
 }

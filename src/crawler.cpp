@@ -5,11 +5,6 @@
 
 namespace crawlers
 {
-	Crawler::Crawler()
-	{
-
-	}
-
 	std::vector<std::string> Crawler::findLinks(std::string const& htmlBody)
 	{
 		const std::regex regexURL(R"!!(<\s*A\s+[^>]*href\s*=\s*"([^"]*)")!!", std::regex::icase);

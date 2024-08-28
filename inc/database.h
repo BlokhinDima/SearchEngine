@@ -22,6 +22,9 @@ namespace databases
 		SearchDatabase(const SearchDatabase&) = delete;
 		~SearchDatabase() {}
 		SearchDatabase& operator=(const SearchDatabase&) = delete;
+		pqxx::result addWord(const std::string& word);
+		pqxx::result addUrl(const std::string& url);
+		void addUrlWordCount(const std::string& urlId, const std::string& wordId, const std::string& wordCount);
 
 	private:
 		std::unique_ptr<pqxx::connection> conn;
@@ -30,6 +33,6 @@ namespace databases
 		void createTables();
 		void createDocumentsTable();
 		void createWordsTable();
-		void createDocumentsWordsCountTable();
+		void createLinksWordsCountTable();
 	};
 }
