@@ -5,6 +5,8 @@
 #include <boost/beast/version.hpp>
 #include <boost/asio/connect.hpp>
 #include <boost/asio/ip/tcp.hpp>
+#include <boost/asio/ssl/stream.hpp>
+#include <boost/asio/ssl/error.hpp>
 #include <cstdlib>
 #include <iostream>
 #include <string>
@@ -26,8 +28,8 @@ namespace downloaders
 		std::string loadWebPage(const std::string& url);
 
 	private:
-		net::io_context ioc;
-		std::regex regexURL{ "^(?:(https?)://)([^/]+)(/.*)?" };
+		net::io_context ioc{};
+		std::regex regexURL{ "^(?:(https)://)([^/]+)(/.*)?" };
 
 	private:
 		std::string load(const std::string& host, const std::string& port, const std::string& target);

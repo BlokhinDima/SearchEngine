@@ -24,8 +24,10 @@ namespace indexers
 		removeTabs(clearedText);
 		removeNewlines(clearedText);
 		setLowercase(clearedText);
-		removePunctuationMarks(clearedText);
 		removeExtraSpaces(clearedText);
+		deleteUnicodeChars(clearedText);
+		removePunctuationMarks(clearedText);
+		std::cout << std::endl << clearedText;
 		return clearedText;
 	}
 
@@ -105,5 +107,10 @@ namespace indexers
 			auto wordId = database.addWord(word)[0][0].as<std::string>();
 			database.addUrlWordCount(urlId, wordId, std::to_string(count));
 		}
+	}
+
+	void Indexer::deleteUnicodeChars(std::string& text)
+	{
+		text.erase(std::remove_if(text.begin(), text.end(), [](char c) {return !(c >= 0 && c < 128); }), text.end());
 	}
 }

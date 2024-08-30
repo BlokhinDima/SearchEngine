@@ -26,5 +26,6 @@ namespace indexers
 		void removePunctuationMarks(std::string& text);
 		WordsCount conutWords(std::string& text);
 		void saveToDatabase(const std::string& url, WordsCount& wordsCount);
+		void deleteUnicodeChars(std::string& text);
 	};
 }
