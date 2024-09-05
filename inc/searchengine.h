@@ -7,6 +7,7 @@
 #include "crawler.h"
 #include "database.h"
 #include "indexer.h"
+#include "server.h"
 
 
 namespace search_engines
@@ -25,6 +26,10 @@ namespace search_engines
 		indexers::Indexer* indexer;
 		databases::ConnectionData connectionData;
 		databases::SearchDatabase* database;
+		net::io_context serverIoc{ 1 };
+		tcp::socket* socket;
+		tcp::acceptor* acceptor;
+		tcp::endpoint* ep;
 
 	private:
 		void setDatabaseConnectionData(const configs::Config& config);

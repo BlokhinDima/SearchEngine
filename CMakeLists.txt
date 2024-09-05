@@ -19,7 +19,7 @@ include_directories("${CMAKE_CURRENT_SOURCE_DIR}/lib/boost_1_85_0")
 
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/lib/libpqxx-7.8.1" libpqxx_build)
 
-add_executable(${EXECUTABLE} ${SRC_FILES})
+add_executable(${EXECUTABLE} ${SRC_FILES} "src/server.cpp" "inc/server.h")
 
 target_link_libraries(${EXECUTABLE} pqxx)
 target_link_libraries(${EXECUTABLE} OpenSSL::SSL)

@@ -39,7 +39,9 @@ namespace databases
 			std::string query =
 				"CREATE TABLE IF NOT EXISTS links"
 				"(id SERIAL primary key, "
-				"link VARCHAR(2048));";
+				"link VARCHAR(2048), "
+				"UNIQUE (link) "
+				"); ";
 
 			pqxx::transaction tx{ *conn };
 			tx.exec(query);
@@ -47,6 +49,7 @@ namespace databases
 		}
 		catch (const std::exception& e)
 		{
+			std::cout << e.what();
 			throw e;
 		}
 	}
@@ -59,7 +62,9 @@ namespace databases
 			std::string query =
 				"CREATE TABLE IF NOT EXISTS words"
 				"(id SERIAL primary key, "
-				"word VARCHAR(32));";
+				"word VARCHAR(32), "
+				"UNIQUE (word)"
+				"); ";
 
 			pqxx::transaction tx{ *conn };
 			tx.exec(query);
@@ -67,6 +72,7 @@ namespace databases
 		}
 		catch (const std::exception& e)
 		{
+			std::cout << e.what();
 			throw e;
 		}
 	}
@@ -89,6 +95,7 @@ namespace databases
 		}
 		catch (const std::exception& e)
 		{
+			std::cout << e.what();
 			throw e;
 		}
 	}
@@ -101,8 +108,12 @@ namespace databases
 			pqxx::transaction tx{ *conn };
 
 			std::string query =
+				"WITH e AS( "
 				"INSERT INTO links (id, link)"
-				"VALUES (DEFAULT, '" + tx.esc(url) + "') RETURNING id; ";
+				"VALUES (DEFAULT, '" + tx.esc(url) + "') "
+				"ON CONFLICT(link) DO NOTHING RETURNING id) "
+				"SELECT * FROM e "
+				"UNION SELECT id FROM links WHERE link='" + tx.esc(url) + "';";
 
 			pqxx::result result = tx.exec(query);
 			tx.commit();
@@ -123,8 +134,12 @@ namespace databases
 			pqxx::transaction tx{ *conn };
 
 			std::string query =
+				"WITH e AS( "
 				"INSERT INTO words (id, word)"
-				"VALUES (DEFAULT, '" + tx.esc(word) +"') RETURNING id; ";
+				"VALUES (DEFAULT, '" + tx.esc(word) + "') "
+				"ON CONFLICT(word) DO NOTHING RETURNING id) "
+				"SELECT * FROM e "
+				"UNION SELECT id FROM words WHERE word='" + tx.esc(word) + "';";
 
 			pqxx::result result = tx.exec(query);
 			tx.commit();
@@ -132,6 +147,7 @@ namespace databases
 		}
 		catch (const std::exception& e)
 		{
+			std::cout << e.what();
 			throw e;
 		}
 	}
@@ -145,13 +161,15 @@ namespace databases
 
 			std::string query =
 				"INSERT INTO links_words_count (link_id, word_id, word_count)"
-				"VALUES ('" + tx.esc(urlId) + "', '" + tx.esc(wordId) + "', '" + tx.esc(wordCount) + "'); ";
+				"VALUES ('" + tx.esc(urlId) + "', '" + tx.esc(wordId) + "', '" + tx.esc(wordCount) + "')"
+				"ON CONFLICT(link_id, word_id) DO NOTHING; ";
 
 			pqxx::result result = tx.exec(query);
 			tx.commit();
 		}
 		catch (const std::exception& e)
 		{
+			std::cout << e.what();
 			throw e;
 		}
 	}

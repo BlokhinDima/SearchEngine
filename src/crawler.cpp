@@ -1,24 +1,117 @@
 #include <iostream>
 
+#include <vector>
+#include <regex>
+#include <thread>
+#include <mutex>
+
 #include "crawler.h"
+#include "queue_ts.h"
+#include "downloader.h"
 
 
 namespace crawlers
 {
+	// TODO
+	void Crawler::crawl(const std::string& startUrl, int depth)
+	{
+		linksQueue.push(startUrl);
+
+		while (depth--)
+		{
+			
+		}
+	}
+
+
+	// TODO
+	void Crawler::createThread()
+	{
+		//auto currentUrl = linksQueue.pop();
+		//std::thread* thread = new std::thread(crawlWebPage, currentUrl);
+		//(*thread).detach();
+	}
+
+
+	// TODO
+	void Crawler::linksToAbsolute(std::string const& parentUrl, std::vector<std::string>& foundLinks)
+	{
+		std::smatch sm;
+
+		for (auto& link : foundLinks)
+		{
+			if (link.find("//") == 0) // relatively to protocol
+			{
+				std::regex_search(parentUrl, sm, std::regex{ "^[^/]+" });
+				link = sm.str() + link;
+			}
+			else if (link.find('/') == 0) // relatively to host name
+			{
+				std::regex_search(parentUrl, sm, std::regex{ "^[^/]+//[^/]+" });
+				link = sm.str() + link;
+			}
+			else if (link.find("../") == 0) // ralatively to parent directory
+			{
+				int ind = std::string::npos;
+				int cnt = (link.rfind("../") + 3) / 3;
+				for (int i = 0; i < cnt + 1; ++i)
+				{
+					ind = parentUrl.rfind('/', ind - 1);
+				}
+				link = std::string{ parentUrl.begin(), parentUrl.begin() + ind + 1 } + std::string{ link.begin() + cnt * 3, link.end() };
+			}
+			else if (std::regex_match(link, std::regex{ "(?:[^/]+/)+[^/]+" }) || std::regex_match(link, std::regex{ "[^/#?]+" })) // ralatively to child directory
+			{
+				int ind = parentUrl.rfind('/');
+				link = std::string{ parentUrl.begin(), parentUrl.begin() + ind + 1 } + link;
+			}
+			std::cout << link << std::endl;
+		}
+	}
+
+
+	// TODO
 	std::vector<std::string> Crawler::findLinks(std::string const& htmlBody)
 	{
 		const std::regex regexURL(R"!!(<\s*A\s+[^>]*href\s*=\s*"([^"]*)")!!", std::regex::icase);
 		std::vector<std::string> links;
 		std::copy(std::sregex_token_iterator(htmlBody.begin(), htmlBody.end(), regexURL, 1),
 			std::sregex_token_iterator(),
-			std::ostream_iterator<std::string>(std::cout, "\n"));
+			std::back_inserter(links));
 
 		return links;
 	}
 
-	std::string Crawler::downloadWebPage(const std::string url)
+
+	// TODO
+	void Crawler::crawlWebPage(const std::string& url)
 	{
 		auto htmlText = downloader.loadWebPage(url);
+
+		auto foundedLinks = findLinks(htmlText);
+		linksToAbsolute(url, foundedLinks);
+
+		for (auto& link : foundedLinks)
+		{
+			if (downloadedLinks.count(link) == 0)
+			{
+				linksQueue.push(link);
+			}
+		}
+
+		indexer.indexPage(url, htmlText);
+		downloadedLinks.insert(url);
+	}
+
+
+	std::string Crawler::downloadWebPage(const std::string& url) // FOR TEST
+	{
+		auto htmlText = downloader.loadWebPage(url);
+		auto foundLinks = findLinks(htmlText);
+		
+		std::cout << "Founded links: " << std::endl;
+		linksToAbsolute(url, foundLinks);
+
 		return indexer.indexPage(url, htmlText);
 	}
 }

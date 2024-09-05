@@ -27,5 +27,6 @@ namespace indexers
 		WordsCount conutWords(std::string& text);
 		void saveToDatabase(const std::string& url, WordsCount& wordsCount);
 		void deleteUnicodeChars(std::string& text);
+		std::string deleteLongWords(std::string& text);
 	};
 }

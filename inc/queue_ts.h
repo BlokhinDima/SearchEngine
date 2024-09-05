@@ -9,7 +9,7 @@ namespace queue_ts
 	class Queue
 	{
 	public:
-		void push(std::string& str);
+		void push(const std::string& str);
 		std::string pop();
 		int size();
 

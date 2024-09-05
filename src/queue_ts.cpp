@@ -2,7 +2,7 @@
 
 namespace queue_ts
 {
-	void Queue::push(std::string& str)
+	void Queue::push(const std::string& str)
 	{
 		std::lock_guard<std::mutex> guard(m);
 		q.push(str);

@@ -21,14 +21,14 @@ namespace indexers
 	std::string Indexer::formatText(std::string& text)
 	{
 		auto clearedText = removeHTMLTags(text);
-		removeTabs(clearedText);
-		removeNewlines(clearedText);
-		setLowercase(clearedText);
-		removeExtraSpaces(clearedText);
 		deleteUnicodeChars(clearedText);
+		setLowercase(clearedText);
+		removeNewlines(clearedText);
+		removeTabs(clearedText);
+		removeExtraSpaces(clearedText);
 		removePunctuationMarks(clearedText);
-		std::cout << std::endl << clearedText;
-		return clearedText;
+		auto result = deleteLongWords(clearedText);
+		return result;
 	}
 
 
@@ -74,6 +74,23 @@ namespace indexers
 	}
 
 
+	std::string Indexer::deleteLongWords(std::string& text)
+	{
+		std::string result;
+		std::stringstream ss(text);
+		std::string word;
+
+		while (ss >> word) {
+			if (word.length() <= 32)
+			{
+				result = result + word + " ";
+			}
+		}
+		
+		return result;
+	}
+
+
 	WordsCount Indexer::conutWords(std::string& text)
 	{
 		WordsCount wordsCount;
@@ -85,25 +102,17 @@ namespace indexers
 			wordsCount[word]++;
 		}
 
-		for (const auto& it : wordsCount)
-		{ 
-			std::cout << it.first << ": Occurs " << it.second << std::endl; 
-		}
-
 		return wordsCount;
 	}
 
 	void Indexer::saveToDatabase(const std::string& url, WordsCount& wordsCount)
 	{
 		auto urlId = database.addUrl(url)[0][0].as<std::string>();
-		std::cout << "ID " << urlId << std::endl;
 
 		for (const auto& pair : wordsCount)
 		{
 			auto word = pair.first;
 			auto count = pair.second;
-			std::cout << word << std::endl;
-			std::cout << count << std::endl;
 			auto wordId = database.addWord(word)[0][0].as<std::string>();
 			database.addUrlWordCount(urlId, wordId, std::to_string(count));
 		}
