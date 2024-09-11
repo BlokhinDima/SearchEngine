@@ -17,13 +17,15 @@ namespace crawlers
 	{
 	public:
 		Crawler(indexers::Indexer& indexer) : indexer(indexer) {};
-		void crawlWebPage(const std::string& url);
+		void crawlWebPage(const std::string& url, int pageLevel);
 		std::vector<std::string> findLinks(std::string const& htmlBody);
 		void crawl(const std::string& startUrl, int depth);
 		std::string downloadWebPage(const std::string& url); // FOR TEST
 
 	private:
-		queue_ts::Queue linksQueue;
+		int workingThreads = 0;
+		const int maxThreads = 4;
+		queue_ts::LinksQueue linksQueue;
 		std::unordered_set<std::string> downloadedLinks;
 		downloaders::BoostBeastDownloader downloader;
 		indexers::Indexer indexer;

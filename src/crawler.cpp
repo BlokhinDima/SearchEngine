@@ -12,28 +12,42 @@
 
 namespace crawlers
 {
-	// TODO
 	void Crawler::crawl(const std::string& startUrl, int depth)
 	{
-		linksQueue.push(startUrl);
+		linksQueue.push(queue_ts::linkLevelPair_t(startUrl, depth));
 
-		while (depth--)
+		for (;;)
 		{
-			
+			if (linksQueue.size() != 0)
+			{
+				if (workingThreads < maxThreads)
+				{
+					createThread();
+				}
+			}
+			else if (workingThreads == 0)
+			{
+				break;
+			}
 		}
 	}
 
 
-	// TODO
 	void Crawler::createThread()
 	{
-		//auto currentUrl = linksQueue.pop();
-		//std::thread* thread = new std::thread(crawlWebPage, currentUrl);
-		//(*thread).detach();
+		auto linkLevelPair = linksQueue.pop();
+		auto currentUrl = linkLevelPair.first;
+		auto pageLevel = linkLevelPair.second;
+
+		if (downloadedLinks.count(currentUrl) == 0)
+		{
+			std::thread* thread = new std::thread(&Crawler::crawlWebPage, this, std::cref(currentUrl), pageLevel);
+			(*thread).detach();
+			workingThreads++;
+		}
 	}
 
 
-	// TODO
 	void Crawler::linksToAbsolute(std::string const& parentUrl, std::vector<std::string>& foundLinks)
 	{
 		std::smatch sm;
@@ -70,7 +84,6 @@ namespace crawlers
 	}
 
 
-	// TODO
 	std::vector<std::string> Crawler::findLinks(std::string const& htmlBody)
 	{
 		const std::regex regexURL(R"!!(<\s*A\s+[^>]*href\s*=\s*"([^"]*)")!!", std::regex::icase);
@@ -83,19 +96,21 @@ namespace crawlers
 	}
 
 
-	// TODO
-	void Crawler::crawlWebPage(const std::string& url)
+	void Crawler::crawlWebPage(const std::string& url, int pageLevel)
 	{
 		auto htmlText = downloader.loadWebPage(url);
 
 		auto foundedLinks = findLinks(htmlText);
 		linksToAbsolute(url, foundedLinks);
 
-		for (auto& link : foundedLinks)
+		if (pageLevel - 1 != 0)
 		{
-			if (downloadedLinks.count(link) == 0)
+			for (auto& link : foundedLinks)
 			{
-				linksQueue.push(link);
+				if (downloadedLinks.count(link) == 0)
+				{
+					linksQueue.push(queue_ts::linkLevelPair_t(link, pageLevel - 1));
+				}
 			}
 		}
 
@@ -111,7 +126,6 @@ namespace crawlers
 		
 		std::cout << "Founded links: " << std::endl;
 		linksToAbsolute(url, foundLinks);
-
 		return indexer.indexPage(url, htmlText);
 	}
 }

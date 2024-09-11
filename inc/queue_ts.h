@@ -6,15 +6,17 @@
 
 namespace queue_ts
 {
-	class Queue
+	typedef std::pair<std::string, int> linkLevelPair_t;
+
+	class LinksQueue
 	{
 	public:
-		void push(const std::string& str);
-		std::string pop();
+		void push(const linkLevelPair_t& linkLevelPair);
+		std::pair<std::string, int> pop();
 		int size();
 
 	private:
-		std::queue<std::string> q;
+		std::queue<std::pair<std::string, int>> q;
 		std::mutex m;
 	};
 }
