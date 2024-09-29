@@ -1,3 +1,6 @@
+#include <boost/algorithm/string.hpp>
+#include <boost/beast/http/string_body.hpp>
+
 #include "server.h"
 
 
@@ -53,17 +56,20 @@ namespace http_servers
         switch (request.method())
         {
         case http::verb::get:
+        {
             response.result(http::status::ok);
-            response.set(http::field::server, "Beast");
-            std::cout << boost::beast::buffers_to_string(request.body().data());
+            response.set(http::field::server, "SearchEngine");
             createResponse();
             break;
-
+        }
         case http::verb::post:
-            std::cout << boost::beast::buffers_to_string(request.body().data());
+        {
+            auto searchQuery = boost::beast::buffers_to_string(request.body().data());
+            auto searchRequestWords = getSearchWords(searchQuery);
+            std::cout << database->selectPages(searchRequestWords);
             createResponse();
             break;
-
+        }
         default:
             // We return responses indicating an error if
             // we do not recognize the request method.
@@ -110,30 +116,15 @@ namespace http_servers
                 << "</body>\n"
                 << "</html>\n";
         }
-        else if (request.method() != http::verb::post)
+        else if (request.method() == http::verb::post)
         {
             response.set(http::field::content_type, "text/html");
-            beast::ostream(response.body())
-                << "<html>\n"
-                << "<style>\n"
-                << "input{\n"
-                << "border - radius: 24px;\n"
-                << "border: 1px solid #dfe1e5;\n"
-                << "background: #fff;\n"
-                << "padding: 20px;\n"
-                << "display: flex;\n"
-                << "z - index: 3;\n"
-                << "width: 638px;\n"
-                << "height: 44px;\n"
-                << "margin: 20px;}\n"
-                << "input:hover{\n"
-                << "box - shadow: 0 0 8px 1px #e1e1e1;}\n"
-                << "</style>\n"
-                << "<form action=\"127.0.0.1\"\n"
-                << "method=\"post\" target=\"_blank\" id=\"search - form\">\n"
-                << "<input name = \"q\" type = \"text\" placeholder = \"Search\"\n"
-                << "autocomplete=\"off\" autofocus></form>\n"
-                << "</html>\n";
+            beast::ostream(response.body()) << html::mainPage;
+        }
+        else
+        {
+            response.set(http::field::content_type, "text/html");
+            beast::ostream(response.body()) << html::mainPage;
         }
     }
 
@@ -170,14 +161,27 @@ namespace http_servers
             });
     }
 
-    void httpServer(tcp::acceptor& acceptor, tcp::socket& socket)
+
+    std::vector<std::string> HTTPConnection::getSearchWords(std::string& searchQuery)
+    {
+        std::vector<std::string> searchRequestWords;
+        searchQuery.erase(0, 2);
+        boost::split(searchRequestWords, searchQuery, boost::is_any_of("+"));
+        return searchRequestWords;
+    }
+
+
+    void httpServer(tcp::acceptor& acceptor, tcp::socket& socket, databases::SearchDatabase* database)
     {
         acceptor.async_accept(socket,
             [&](beast::error_code ec)
             {
                 if (!ec)
-                    std::make_shared<HTTPConnection>(std::move(socket))->start();
-                httpServer(acceptor, socket);
+                {
+                    auto httpConnection = std::make_shared<http_servers::HTTPConnection>(std::move(socket), database);
+                    httpConnection->start();
+                }
+                httpServer(acceptor, socket, database);
             });
     }
 }

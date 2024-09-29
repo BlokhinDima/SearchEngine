@@ -173,4 +173,10 @@ namespace databases
 			throw e;
 		}
 	}
+
+
+	std::string SearchDatabase::selectPages(std::vector<std::string>& searchRequest)
+	{
+		return "Pages Selected!";
+	}
 }

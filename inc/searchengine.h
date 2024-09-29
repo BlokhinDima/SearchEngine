@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <memory>
 
 #include "config.h"
 #include "configparser.h"
@@ -27,6 +28,7 @@ namespace search_engines
 		databases::ConnectionData connectionData;
 		databases::SearchDatabase* database;
 		net::io_context serverIoc{ 1 };
+		std::shared_ptr<http_servers::HTTPConnection> httpConnection;
 		tcp::socket* socket;
 		tcp::acceptor* acceptor;
 		tcp::endpoint* ep;

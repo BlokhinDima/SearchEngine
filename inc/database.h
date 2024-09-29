@@ -25,6 +25,7 @@ namespace databases
 		pqxx::result addWord(const std::string& word);
 		pqxx::result addUrl(const std::string& url);
 		void addUrlWordCount(const std::string& urlId, const std::string& wordId, const std::string& wordCount);
+		std::string selectPages(std::vector<std::string>& searchRequest);
 
 	private:
 		std::unique_ptr<pqxx::connection> conn;

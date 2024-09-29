@@ -1,9 +1,22 @@
+#include <boost/beast/core.hpp>
+#include <boost/beast/http.hpp>
+#include <boost/beast/version.hpp>
+#include <boost/asio/connect.hpp>
+#include <boost/asio/ip/tcp.hpp>
+#include <chrono>
+
 #include "searchengine.h"
 #include "server.h"
 
+namespace beast = boost::beast;					// from <boost/beast.hpp>
+namespace http = beast::http;					// from <boost/beast/http.hpp>
+namespace websocket = beast::websocket;        // from <boost/asio.hpp>
+using tcp = net::ip::tcp;						// from <boost/asio/ip/tcp.hpp>
 
 namespace search_engines
 {
+	using namespace std::chrono_literals;
+
 	SearchEngine::SearchEngine(const std::string& configFile)
 	{
 		config = configParser.parseConfigFile(configFile);
@@ -41,8 +54,9 @@ namespace search_engines
 	{
 		auto engine_settings = config->getEngineSettings();
 		auto result = crawler->downloadWebPage(engine_settings.startPage);
-		std::cout << "\nCleared HTML:\n" << result << std::endl;
-		http_servers::httpServer(*acceptor, *socket);
+		std::cout << "\nCleared HTML:\n" << result << std::endl;  
+		
+		http_servers::httpServer(*acceptor, *socket, database);
 		serverIoc.run();
 	}
 
@@ -57,5 +71,4 @@ namespace search_engines
 		connectionData.login = databaseConfig.username;
 		connectionData.pass = databaseConfig.password;
 	}
-
 }
