@@ -4,6 +4,7 @@
 #include <regex>
 #include <thread>
 #include <mutex>
+#include <algorithm>
 
 #include "crawler.h"
 #include "queue_ts.h"
@@ -74,13 +75,13 @@ namespace crawlers
 				}
 				link = std::string{ parentUrl.begin(), parentUrl.begin() + ind + 1 } + std::string{ link.begin() + cnt * 3, link.end() };
 			}
-			else if (std::regex_match(link, std::regex{ "(?:[^/]+/)+[^/]+" }) || std::regex_match(link, std::regex{ "[^/#?]+" })) // ralatively to child directory
+			else if (std::regex_match(link, std::regex{ "(?:[^/]+/)+[^/]+" }) || (link.find("#") == 0)) // anchor link
 			{
-				int ind = parentUrl.rfind('/');
-				link = std::string{ parentUrl.begin(), parentUrl.begin() + ind + 1 } + link;
+				link = " ";
 			}
-			std::cout << link << std::endl;
 		}
+
+		foundLinks.erase(std::remove(foundLinks.begin(), foundLinks.end(), " "), foundLinks.end());
 	}
 
 
@@ -123,9 +124,17 @@ namespace crawlers
 	{
 		auto htmlText = downloader.loadWebPage(url);
 		auto foundLinks = findLinks(htmlText);
-		
+
 		std::cout << "Founded links: " << std::endl;
+		for (const auto& link : foundLinks) std::cout << link << std::endl;
+
+		std::cout << std::endl;
+
 		linksToAbsolute(url, foundLinks);
+
+		std::cout << "Founded links: " << std::endl;
+		for (const auto& link : foundLinks) std::cout << link << std::endl;
+
 		return indexer.indexPage(url, htmlText);
 	}
 }
