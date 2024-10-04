@@ -14,9 +14,12 @@ namespace downloaders
 			if (sm[1].str() == "https")
 			{
 				port = "443";
+				return load(host, port, target);
 			}
-
-			return load(host, port, target);
+			else
+			{
+				return "";
+			}
 		}
 		else
 		{
@@ -37,6 +40,7 @@ namespace downloaders
 			auto const results = resolver.resolve(host, port);
 
 			net::connect(stream.next_layer(), results.begin(), results.end());
+			SSL_set_tlsext_host_name(stream.native_handle(), host.c_str());
 			stream.handshake(ssl::stream_base::client);
 
 			http::request<http::string_body> req{ http::verb::get, target, version };

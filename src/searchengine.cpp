@@ -53,8 +53,9 @@ namespace search_engines
 	void SearchEngine::run()
 	{
 		auto engine_settings = config->getEngineSettings();
-		auto result = crawler->downloadWebPage(engine_settings.startPage);
-		std::cout << "\nCleared HTML:\n" << result << std::endl;  
+		crawler->crawl(engine_settings.startPage, stoi(engine_settings.recursionDepth));
+		//auto result = crawler->downloadWebPage(engine_settings.startPage);
+		//std::cout << "\nCleared HTML:\n" << result << std::endl;  
 		
 		http_servers::httpServer(*acceptor, *socket, database);
 		serverIoc.run();

@@ -31,6 +31,8 @@ namespace crawlers
 				break;
 			}
 		}
+
+		std::cout << "Crawl done!" << std::endl;
 	}
 
 
@@ -42,7 +44,7 @@ namespace crawlers
 
 		if (downloadedLinks.count(currentUrl) == 0)
 		{
-			std::thread* thread = new std::thread(&Crawler::crawlWebPage, this, std::cref(currentUrl), pageLevel);
+			std::thread* thread = new std::thread(&Crawler::crawlWebPage, this, currentUrl, pageLevel);
 			(*thread).detach();
 			workingThreads++;
 		}
@@ -97,15 +99,19 @@ namespace crawlers
 	}
 
 
-	void Crawler::crawlWebPage(const std::string& url, int pageLevel)
+	void Crawler::crawlWebPage(std::string url, int pageLevel)
 	{
 		auto htmlText = downloader.loadWebPage(url);
 
-		auto foundedLinks = findLinks(htmlText);
-		linksToAbsolute(url, foundedLinks);
-
 		if (pageLevel - 1 != 0)
 		{
+			auto foundedLinks = findLinks(htmlText);
+			linksToAbsolute(url, foundedLinks);
+
+			m.lock();
+			std::cout << "Links added: " << foundedLinks.size() << std::endl;
+			m.unlock();
+
 			for (auto& link : foundedLinks)
 			{
 				if (downloadedLinks.count(link) == 0)
@@ -115,8 +121,12 @@ namespace crawlers
 			}
 		}
 
+		m.lock();
 		indexer.indexPage(url, htmlText);
 		downloadedLinks.insert(url);
+		workingThreads--;
+		std::cout << "Link crawled: " << url << " Level: " << pageLevel << " Working threads: " << workingThreads << " Links to crawl: " << linksQueue.size() << std::endl;
+		m.unlock();
 	}
 
 

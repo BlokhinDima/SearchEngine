@@ -4,6 +4,7 @@
 #include <vector>
 #include <regex>
 #include <unordered_set>
+#include <mutex>
 
 #include "queue_ts.h"
 #include "downloader.h"
@@ -17,12 +18,13 @@ namespace crawlers
 	{
 	public:
 		Crawler(indexers::Indexer& indexer) : indexer(indexer) {};
-		void crawlWebPage(const std::string& url, int pageLevel);
+		void crawlWebPage(std::string url, int pageLevel);
 		std::vector<std::string> findLinks(std::string const& htmlBody);
 		void crawl(const std::string& startUrl, int depth);
 		std::string downloadWebPage(const std::string& url); // FOR TEST
 
 	private:
+		std::mutex m;
 		int workingThreads = 0;
 		const int maxThreads = 4;
 		queue_ts::LinksQueue linksQueue;
