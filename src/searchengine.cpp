@@ -52,13 +52,22 @@ namespace search_engines
 
 	void SearchEngine::run()
 	{
-		auto engine_settings = config->getEngineSettings();
-		crawler->crawl(engine_settings.startPage, stoi(engine_settings.recursionDepth));
-		//auto result = crawler->downloadWebPage(engine_settings.startPage);
-		//std::cout << "\nCleared HTML:\n" << result << std::endl;  
-		
-		http_servers::httpServer(*acceptor, *socket, database);
-		serverIoc.run();
+		try 
+		{
+			auto engine_settings = config->getEngineSettings();
+
+			crawler->crawl(engine_settings.startPage, stoi(engine_settings.recursionDepth));
+
+			//auto result = crawler->downloadWebPage(engine_settings.startPage);
+			//std::cout << "\nCleared HTML:\n" << result << std::endl;
+
+			http_servers::httpServer(*acceptor, *socket, *database);
+			serverIoc.run();
+		}
+		catch (const std::exception& e)
+		{
+			std::cout << e.what();
+		}
 	}
 
 	
@@ -72,4 +81,5 @@ namespace search_engines
 		connectionData.login = databaseConfig.username;
 		connectionData.pass = databaseConfig.password;
 	}
+
 }

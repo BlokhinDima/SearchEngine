@@ -66,7 +66,7 @@ namespace http_servers
         {
             auto searchQuery = boost::beast::buffers_to_string(request.body().data());
             auto searchRequestWords = getSearchWords(searchQuery);
-            std::cout << database->selectPages(searchRequestWords);
+            database.selectRankedPages(searchRequestWords);
             createResponse();
             break;
         }
@@ -167,11 +167,18 @@ namespace http_servers
         std::vector<std::string> searchRequestWords;
         searchQuery.erase(0, 2);
         boost::split(searchRequestWords, searchQuery, boost::is_any_of("+"));
+
+        for (const auto& word : searchRequestWords)
+        {
+            std::cout << word << " ";
+        }
+        std::cout << std::endl;
+
         return searchRequestWords;
     }
 
 
-    void httpServer(tcp::acceptor& acceptor, tcp::socket& socket, databases::SearchDatabase* database)
+    void httpServer(tcp::acceptor& acceptor, tcp::socket& socket, databases::SearchDatabase& database)
     {
         acceptor.async_accept(socket,
             [&](beast::error_code ec)

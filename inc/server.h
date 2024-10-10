@@ -23,13 +23,13 @@ namespace http_servers
 	class HTTPConnection : public std::enable_shared_from_this<HTTPConnection>
 	{
 	public:
-		HTTPConnection(tcp::socket socket, databases::SearchDatabase* database) : socket(std::move(socket)), database(database) {}
+		HTTPConnection(tcp::socket socket, databases::SearchDatabase& database) : socket(std::move(socket)), database(database) {}
 
 	public:
 		void start();
 
 	private:
-		databases::SearchDatabase* database;
+		databases::SearchDatabase& database;
 		std::string searchRequest = "-";
 		tcp::socket socket;
 		beast::flat_buffer buffer{ 8192 };
@@ -46,7 +46,7 @@ namespace http_servers
 		std::vector<std::string> getSearchWords(std::string& searchQuery);
 	};
 
-	void httpServer(tcp::acceptor& acceptor, tcp::socket& socket, databases::SearchDatabase* database);
+	void httpServer(tcp::acceptor& acceptor, tcp::socket& socket, databases::SearchDatabase& database);
 }
 
 

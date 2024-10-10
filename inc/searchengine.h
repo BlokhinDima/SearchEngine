@@ -19,6 +19,7 @@ namespace search_engines
 		SearchEngine(const std::string& configFile = "");
 		~SearchEngine();
 		void run();
+		void selectRankedPages(std::vector<std::string> SearchWords);
 
 	private:
 		config_parsers::ConfigFileParser configParser;

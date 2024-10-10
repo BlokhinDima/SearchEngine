@@ -32,7 +32,7 @@ namespace crawlers
 			}
 		}
 
-		std::cout << "Crawl done!" << std::endl;
+		std::cout << "\nCrawl done!\n";
 	}
 
 

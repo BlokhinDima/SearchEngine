@@ -175,8 +175,55 @@ namespace databases
 	}
 
 
-	std::string SearchDatabase::selectPages(std::vector<std::string>& searchRequest)
+	std::vector<std::string> SearchDatabase::selectRankedPages(const std::vector<std::string>& searchRequest)
 	{
-		return "Pages Selected!";
+		try
+		{
+			std::string whereCondition = "(";
+
+			for (int i = 0; i < searchRequest.size(); i++)
+			{
+				whereCondition += searchRequest.at(i);
+				if (i < searchRequest.size() - 1) whereCondition += ")|(";
+			}
+			whereCondition += ") ";
+			
+			std::cout << whereCondition << std::endl;
+
+			pqxx::transaction tx{ *conn };
+
+			std::string query =
+				"SELECT link, SUM(word_count) as sum_words_count FROM links_words_count "
+				"LEFT JOIN links ON links.id = links_words_count.link_id "
+				"LEFT JOIN words ON words.id = links_words_count.word_id "
+				"WHERE word ~ '" + tx.esc(whereCondition) + "' "
+				"GROUP BY link "
+				"ORDER BY sum_words_count DESC "
+				"LIMIT " + tx.esc(std::to_string(rankPositionsLimit)) + ";";
+
+			pqxx::result result = tx.exec(query);
+
+			std::size_t const num_rows = std::size(result);
+			std::size_t const num_cols = result.columns();
+
+			for (std::size_t rownum = 0; rownum < num_rows; ++rownum)
+			{
+				pqxx::row const row = result[rownum];
+				for (std::size_t colnum = 0; colnum < num_cols; ++colnum)
+				{
+					pqxx::field const field = row[colnum];
+					std::cout << field.c_str() << '\t';
+				}
+
+				std::cout << '\n';
+			}
+
+			return searchRequest;
+		}
+		catch (const std::exception& e)
+		{
+			std::cout << e.what();
+			throw e;
+		}
 	}
 }
