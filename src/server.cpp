@@ -1,5 +1,6 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/beast/http/string_body.hpp>
+#include <mutex>
 
 #include "server.h"
 
@@ -66,7 +67,11 @@ namespace http_servers
         {
             auto searchQuery = boost::beast::buffers_to_string(request.body().data());
             auto searchRequestWords = getSearchWords(searchQuery);
+
+            m.lock();
             auto rankedPages = database.selectRankedPages(searchRequestWords);
+            m.unlock();
+
             createRankedListHtml(rankedPages);
             createResponse();
             break;

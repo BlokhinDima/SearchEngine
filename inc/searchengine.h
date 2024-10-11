@@ -19,7 +19,6 @@ namespace search_engines
 		SearchEngine(const std::string& configFile = "");
 		~SearchEngine();
 		void run();
-		void selectRankedPages(std::vector<std::string> SearchWords);
 
 	private:
 		config_parsers::ConfigFileParser configParser;
@@ -28,6 +27,7 @@ namespace search_engines
 		indexers::Indexer* indexer;
 		databases::ConnectionData connectionData;
 		databases::SearchDatabase* database;
+		databases::SearchDatabase* databaseServer;
 		net::io_context serverIoc{ 1 };
 		std::shared_ptr<http_servers::HTTPConnection> httpConnection;
 		tcp::socket* socket;
@@ -36,5 +36,6 @@ namespace search_engines
 
 	private:
 		void setDatabaseConnectionData(const configs::Config& config);
+		void runServer();
 	};
 }

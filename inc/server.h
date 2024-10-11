@@ -29,6 +29,7 @@ namespace http_servers
 		void start();
 
 	private:
+		std::mutex m;
 		databases::SearchDatabase& database;
 		std::string rankedListHtml;
 		tcp::socket socket;

@@ -32,7 +32,7 @@ namespace crawlers
 			}
 		}
 
-		std::cout << "\nCrawl done!\n";
+		std::cout << "\nCrawling finished!\n";
 	}
 
 
@@ -125,26 +125,12 @@ namespace crawlers
 		indexer.indexPage(url, htmlText);
 		downloadedLinks.insert(url);
 		workingThreads--;
-		std::cout << "Link crawled: " << url << " Level: " << pageLevel << " Working threads: " << workingThreads << " Links to crawl: " << linksQueue.size() << std::endl;
+		std::cout 
+			<< "Link crawled: " << url 
+			<< " Level: " << pageLevel 
+			<< " Working threads: " << workingThreads 
+			<< " Links to crawl: " << linksQueue.size() 
+			<< std::endl;
 		m.unlock();
-	}
-
-
-	std::string Crawler::downloadWebPage(const std::string& url) // FOR TEST
-	{
-		auto htmlText = downloader.loadWebPage(url);
-		auto foundLinks = findLinks(htmlText);
-
-		std::cout << "Founded links: " << std::endl;
-		for (const auto& link : foundLinks) std::cout << link << std::endl;
-
-		std::cout << std::endl;
-
-		linksToAbsolute(url, foundLinks);
-
-		std::cout << "Founded links: " << std::endl;
-		for (const auto& link : foundLinks) std::cout << link << std::endl;
-
-		return indexer.indexPage(url, htmlText);
 	}
 }

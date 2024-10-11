@@ -4,14 +4,15 @@
 #include <boost/asio/connect.hpp>
 #include <boost/asio/ip/tcp.hpp>
 #include <chrono>
+#include <thread>
 
 #include "searchengine.h"
 #include "server.h"
 
-namespace beast = boost::beast;					// from <boost/beast.hpp>
-namespace http = beast::http;					// from <boost/beast/http.hpp>
+namespace beast = boost::beast;	               // from <boost/beast.hpp>
+namespace http = beast::http;	               // from <boost/beast/http.hpp>
 namespace websocket = beast::websocket;        // from <boost/asio.hpp>
-using tcp = net::ip::tcp;						// from <boost/asio/ip/tcp.hpp>
+using tcp = net::ip::tcp;					   // from <boost/asio/ip/tcp.hpp>
 
 namespace search_engines
 {
@@ -20,10 +21,11 @@ namespace search_engines
 	SearchEngine::SearchEngine(const std::string& configFile)
 	{
 		config = configParser.parseConfigFile(configFile);
-		std::cout << *config;
+		std::cout << "Search Engine Configuration:/n" << *config;
 
 		setDatabaseConnectionData(*config);
 		database = new databases::SearchDatabase(connectionData);
+		databaseServer = new databases::SearchDatabase(connectionData);
 
 		indexer = new indexers::Indexer(*database);
 		crawler = new crawlers::Crawler(*indexer);
@@ -42,6 +44,7 @@ namespace search_engines
 	{
 		delete config;
 		delete database;
+		delete databaseServer;
 		delete indexer;
 		delete crawler;
 		delete socket;
@@ -54,15 +57,11 @@ namespace search_engines
 	{
 		try 
 		{
+			std::thread* thread = new std::thread(&SearchEngine::runServer, this);
+			(*thread).detach();
+
 			auto engine_settings = config->getEngineSettings();
-
 			crawler->crawl(engine_settings.startPage, stoi(engine_settings.recursionDepth));
-
-			//auto result = crawler->downloadWebPage(engine_settings.startPage);
-			//std::cout << "\nCleared HTML:\n" << result << std::endl;
-
-			http_servers::httpServer(*acceptor, *socket, *database);
-			serverIoc.run();
 		}
 		catch (const std::exception& e)
 		{
@@ -82,4 +81,9 @@ namespace search_engines
 		connectionData.pass = databaseConfig.password;
 	}
 
+	void SearchEngine::runServer()
+	{
+		http_servers::httpServer(*acceptor, *socket, *databaseServer);
+		serverIoc.run();
+	}
 }

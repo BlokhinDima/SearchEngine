@@ -4,11 +4,11 @@ namespace queue_ts
 {
 	void LinksQueue::push(const linkLevelPair_t& linkLevelPair)
 	{
-		if (q.size() < 5) // TEMPORARY LIMIT SIZE
-		{
+		//if (q.size() < 5) // TEMPORARY LIMIT SIZE
+		//{
 			std::lock_guard<std::mutex> guard(m);
 			q.push(linkLevelPair);
-		}
+		//}
 	}
 
 
