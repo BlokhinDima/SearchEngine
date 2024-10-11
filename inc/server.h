@@ -30,7 +30,7 @@ namespace http_servers
 
 	private:
 		databases::SearchDatabase& database;
-		std::string searchRequest = "-";
+		std::string rankedListHtml;
 		tcp::socket socket;
 		beast::flat_buffer buffer{ 8192 };
 		http::request<http::dynamic_body> request;
@@ -44,6 +44,7 @@ namespace http_servers
 		void writeResponse();
 		void checkDeadline();
 		std::vector<std::string> getSearchWords(std::string& searchQuery);
+		void createRankedListHtml(std::vector<std::string> rankedPages);
 	};
 
 	void httpServer(tcp::acceptor& acceptor, tcp::socket& socket, databases::SearchDatabase& database);
@@ -52,11 +53,7 @@ namespace http_servers
 
 namespace html
 {
-	const std::string mainPage =
-		"<html lang='en' class=''>\n"
-		"<head>\n"
-		"<meta charset='UTF-8'>\n"
-		"<title>Search Engine</title>\n"
+	const std::string mainPageStyle =
 		"<style>\n"
 		"body {\n"
 		"background-color: #3745c2;\n"
@@ -96,9 +93,36 @@ namespace html
 		"width: 44px;\n"
 		"height: 44px;\n"
 		"}\n"
-		"</style>\n"
-		"</head>\n"
-		"<body>\n"
+		"ol {\n"
+		"width=\"1500\";\n"
+		"padding: 0px;\n"
+		"color: white;\n"
+		"margin: 30px;\n"
+		"}\n"
+		"a:link {\n"
+		"color: white;\n"
+		"background-color: transparent;\n"
+		"text-decoration: none;\n"
+		"}\n"
+		"a:visited {\n"
+		"color: grey;\n"
+		"background-color: transparent;\n"
+		"text-decoration: none;\n"
+		"}\n"
+		"a:hover {\n"
+		"color: red;\n"
+		"background-color: transparent;\n"
+		"text-decoration: none;\n"
+		"}\n"
+		"a:active {\n"
+		"color: green;\n"
+		"background-color: transparent;\n"
+		"text-decoration: none;\n"
+		"}\n"
+		"</style>\n";
+
+
+	const std::string searchBar =
 		"<form method=\"post\" role=\"search\" id=\"form\">\n"
 		"<input type=\"search\" id=\"query\" name=\"q\"\n"
 		"placeholder=\"Search...\" aria-label=\"Search through site content\">\n"
@@ -115,7 +139,6 @@ namespace html
 		"97.091-218.455 218.455z\"></path>\n"
 		"</svg>\n"
 		"</button>\n"
-		"</form>\n"
-		"</body>\n"
-		"</html>\n";
+		"</form>\n";
+		
 }

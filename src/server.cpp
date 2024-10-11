@@ -66,7 +66,8 @@ namespace http_servers
         {
             auto searchQuery = boost::beast::buffers_to_string(request.body().data());
             auto searchRequestWords = getSearchWords(searchQuery);
-            database.selectRankedPages(searchRequestWords);
+            auto rankedPages = database.selectRankedPages(searchRequestWords);
+            createRankedListHtml(rankedPages);
             createResponse();
             break;
         }
@@ -119,12 +120,33 @@ namespace http_servers
         else if (request.method() == http::verb::post)
         {
             response.set(http::field::content_type, "text/html");
-            beast::ostream(response.body()) << html::mainPage;
+            beast::ostream(response.body())
+                << "<html lang='en' class=''>\n"
+                << "<head>\n"
+                << "<meta charset='UTF-8'>\n"
+                << "<title>Search Engine</title>\n"
+                << "</head>\n"
+                << "<body>\n"
+                << html::mainPageStyle
+                << html::searchBar
+                << rankedListHtml
+                << "</body>\n"
+                << "</html>\n";
         }
         else
         {
             response.set(http::field::content_type, "text/html");
-            beast::ostream(response.body()) << html::mainPage;
+            beast::ostream(response.body()) 
+                << "<html lang='en' class=''>\n"
+                << "<head>\n"
+                << "<meta charset='UTF-8'>\n"
+                << "<title>Search Engine</title>\n"
+                << "</head>\n"
+                << "<body>\n"
+                << html::mainPageStyle
+                << html::searchBar
+                << "</body>\n"
+                << "</html>\n";
         }
     }
 
@@ -175,6 +197,29 @@ namespace http_servers
         std::cout << std::endl;
 
         return searchRequestWords;
+    }
+
+
+    void  HTTPConnection::createRankedListHtml(std::vector<std::string> rankedPages)
+    {
+
+        if (rankedPages.size() != 0)
+        {
+            rankedListHtml = "<ol>\n";
+            for (const auto& link : rankedPages)
+            {
+                rankedListHtml += "<li><a href=\"";
+                rankedListHtml += link;
+                rankedListHtml += "\" target=\"_blank\">";
+                rankedListHtml += link;
+                rankedListHtml += "</a></li>\n";
+            }
+            rankedListHtml += "</ol>\n";
+        }
+        else
+        {
+            rankedListHtml += "<p style=\"color:White;\">Pages not found. Try another search request!</p>\n";
+        }
     }
 
 

@@ -179,14 +179,13 @@ namespace databases
 	{
 		try
 		{
-			std::string whereCondition = "(";
+			std::string whereCondition = "";
 
 			for (int i = 0; i < searchRequest.size(); i++)
 			{
 				whereCondition += searchRequest.at(i);
 				if (i < searchRequest.size() - 1) whereCondition += ")|(";
 			}
-			whereCondition += ") ";
 			
 			std::cout << whereCondition << std::endl;
 
@@ -196,12 +195,15 @@ namespace databases
 				"SELECT link, SUM(word_count) as sum_words_count FROM links_words_count "
 				"LEFT JOIN links ON links.id = links_words_count.link_id "
 				"LEFT JOIN words ON words.id = links_words_count.word_id "
-				"WHERE word ~ '" + tx.esc(whereCondition) + "' "
+				"WHERE word ~ '(" + tx.esc(whereCondition) + ")' "
 				"GROUP BY link "
 				"ORDER BY sum_words_count DESC "
 				"LIMIT " + tx.esc(std::to_string(rankPositionsLimit)) + ";";
 
 			pqxx::result result = tx.exec(query);
+
+
+			std::vector<std::string> rankedList;
 
 			std::size_t const num_rows = std::size(result);
 			std::size_t const num_cols = result.columns();
@@ -212,13 +214,16 @@ namespace databases
 				for (std::size_t colnum = 0; colnum < num_cols; ++colnum)
 				{
 					pqxx::field const field = row[colnum];
+					if (colnum == 0) rankedList.push_back(field.c_str());
 					std::cout << field.c_str() << '\t';
 				}
 
 				std::cout << '\n';
 			}
 
-			return searchRequest;
+			for (const auto& link : rankedList) std::cout << link << std::endl;
+
+			return rankedList;
 		}
 		catch (const std::exception& e)
 		{
