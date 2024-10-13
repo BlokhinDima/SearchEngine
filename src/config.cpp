@@ -1,11 +1,5 @@
 #include "config.h"
 
-
-configs::Config::Config()
-{
-}
-
-
 std::ostream& operator<<(std::ostream& stream, const configs::Config& config)
 {
 	auto databaseSettings = config.getDatabaseSettings();

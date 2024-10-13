@@ -25,7 +25,7 @@ namespace configs
 	class Config
 	{
 	public:
-		Config();
+		Config() {}
 		DatabaseSettings getDatabaseSettings() const { return databaseSettings; }
 		EngineSettings getEngineSettings() const { return engineSettings; }
 		void setDatabaseSettings(DatabaseSettings& databaseSettings) { this->databaseSettings = databaseSettings; }
@@ -36,6 +36,5 @@ namespace configs
 		EngineSettings engineSettings;
 	};
 }
-
 
 std::ostream& operator<<(std::ostream& stream, const configs::Config& config);

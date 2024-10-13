@@ -4,28 +4,28 @@ namespace downloaders
 {
 	std::string BoostBeastDownloader::loadWebPage(const std::string& url)
 	{
-		std::smatch sm;
-		if (std::regex_match(url, sm, regexURL))
-		{
-			const std::string host = sm[2].str();
-			const std::string target = sm[3].length() == 0 ? "/" : sm[3].str();
+		std::smatch matchResult;
 
-			std::string port;
-			if (sm[1].str() == "https")
-			{
-				port = "443";
-				return load(host, port, target);
-			}
-			else
-			{
-				return "";
-			}
+		if (!std::regex_match(url, matchResult, regexURL)) 
+		{
+			return "";
 		}
-		else
+
+		const std::string host = matchResult[2].str();
+		const std::string target = matchResult[3].length() == 0 ? "/" : matchResult[3].str();
+		std::string port;
+
+		if (matchResult[1].str() == "https") 
+		{
+			port = "443";
+			return load(host, port, target);
+		}
+		else 
 		{
 			return "";
 		}
 	}
+
 
 	std::string BoostBeastDownloader::load(const std::string& host, const std::string& port, const std::string& target)
 	{
@@ -63,7 +63,7 @@ namespace downloaders
 		}
 		catch (std::exception const& e)
 		{
-			std::cerr << "Error: " << e.what() << std::endl;
+			throw e;
 		}
 	}
 }

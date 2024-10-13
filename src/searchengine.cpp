@@ -18,33 +18,40 @@ namespace search_engines
 {
 	using namespace std::chrono_literals;
 
-	SearchEngine::SearchEngine(const std::string& configFile)
+	SearchEngine::SearchEngine(const std::string& configFile) : configFile(configFile)
 	{
-		config = configParser.parseConfigFile(configFile);
-		std::cout << "Search Engine Configuration:/n" << *config;
+		try
+		{
+			config = configParser.parseConfigFile(configFile);
+			std::cout << "Search Engine Configuration:/n" << *config;
+		}
+		catch (const std::exception& e)
+		{
+			std::cout << "Configuration file error: " << e.what();
+		}
 
 		setDatabaseConnectionData(*config);
-		database = new databases::SearchDatabase(connectionData);
-		databaseServer = new databases::SearchDatabase(connectionData);
+		indexerDatabaseConn = new databases::SearchDatabase(connectionData);
+		serverDatabaseConn = new databases::SearchDatabase(connectionData);
 
-		indexer = new indexers::Indexer(*database);
+		indexer = new indexers::Indexer(*indexerDatabaseConn);
 		crawler = new crawlers::Crawler(*indexer);
 
-		auto engine_settings = config->getEngineSettings();
-		socket = new tcp::socket{ serverIoc };
+		auto engineSettings = config->getEngineSettings();
+		serverPort = std::stoul(engineSettings.port);
 
-		auto const address = net::ip::make_address("127.0.0.1");
-		
-		ep = new tcp::endpoint{ address,  80};
-		acceptor = new tcp::acceptor{ serverIoc, *ep };
+		socket = new tcp::socket{serverIoc};
+		auto const address = net::ip::make_address(serverHost);
+		ep = new tcp::endpoint{address,  serverPort};
+		acceptor = new tcp::acceptor{serverIoc, *ep};
 	}
 
 
 	SearchEngine::~SearchEngine()
 	{
 		delete config;
-		delete database;
-		delete databaseServer;
+		delete indexerDatabaseConn;
+		delete serverDatabaseConn;
 		delete indexer;
 		delete crawler;
 		delete socket;
@@ -52,7 +59,7 @@ namespace search_engines
 		delete ep;
 	}
 
-
+	
 	void SearchEngine::run()
 	{
 		try 
@@ -65,7 +72,7 @@ namespace search_engines
 		}
 		catch (const std::exception& e)
 		{
-			std::cout << e.what();
+			sendErrorMessage(e.what());
 		}
 	}
 
@@ -81,9 +88,29 @@ namespace search_engines
 		connectionData.pass = databaseConfig.password;
 	}
 
+
 	void SearchEngine::runServer()
 	{
-		http_servers::httpServer(*acceptor, *socket, *databaseServer);
+		http_servers::httpServer(*acceptor, *socket, *serverDatabaseConn);
 		serverIoc.run();
+	}
+
+
+	void SearchEngine::sendErrorMessage(const std::string& message)
+	{
+		asio::io_context context;
+		beast::tcp_stream stream(context);
+
+		stream.connect(tcp::resolver(context).resolve(*ep));
+		http::request<http::string_body> request;
+		request.version(11);
+		request.method(http::verb::post);
+		request.target("/error");
+		request.set(http::field::host, serverHost);
+		request.set(http::field::content_type, "text/plain");
+		request.body() = message;
+		request.prepare_payload();
+
+		boost::beast::http::write(stream, request);
 	}
 }

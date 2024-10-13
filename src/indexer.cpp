@@ -105,6 +105,7 @@ namespace indexers
 		return wordsCount;
 	}
 
+
 	void Indexer::saveToDatabase(const std::string& url, WordsCount& wordsCount)
 	{
 		auto urlId = database.addUrl(url)[0][0].as<std::string>();
@@ -117,6 +118,7 @@ namespace indexers
 			database.addUrlWordCount(urlId, wordId, std::to_string(count));
 		}
 	}
+
 
 	void Indexer::deleteUnicodeChars(std::string& text)
 	{

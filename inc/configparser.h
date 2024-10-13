@@ -11,7 +11,7 @@ namespace config_parsers
 	class ConfigFileParser
 	{
 	public:
-		ConfigFileParser();
+		ConfigFileParser() {}
 		configs::Config* parseConfigFile(const std::string& configFile);
 
 	private:

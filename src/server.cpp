@@ -5,21 +5,6 @@
 #include "server.h"
 
 
-namespace my_program_state
-{
-    std::size_t request_count()
-    {
-        static std::size_t count = 0;
-        return ++count;
-    }
-
-    std::time_t now()
-    {
-        return std::time(0);
-    }
-}
-
-
 namespace http_servers
 {
     void HTTPConnection::start()
@@ -65,20 +50,35 @@ namespace http_servers
         }
         case http::verb::post:
         {
-            auto searchQuery = boost::beast::buffers_to_string(request.body().data());
-            auto searchRequestWords = getSearchWords(searchQuery);
+            if (request.target() == "/error")
+            {
+                message = createErrorMessageHtml(beast::buffers_to_string(request.body().data()));
+            }
+            else
+            {
+                try
+                {
+                    auto searchQuery = boost::beast::buffers_to_string(request.body().data());
+                    auto searchRequestWords = getSearchWords(searchQuery);
 
-            m.lock();
-            auto rankedPages = database.selectRankedPages(searchRequestWords);
-            m.unlock();
+                    m.lock();
+                    auto rankedPages = database.getRankedList(searchRequestWords);
+                    m.unlock();
 
-            createRankedListHtml(rankedPages);
+                    message = createRankedListHtml(rankedPages);
+                }
+                catch (const std::exception& e)
+                {
+                    m.unlock();
+                    message = createErrorMessageHtml(e.what());
+                }
+            }
+
             createResponse();
             break;
         }
         default:
-            // We return responses indicating an error if
-            // we do not recognize the request method.
+            // We return responses indicating an error if we do not recognize the request method
             response.result(http::status::bad_request);
             response.set(http::field::content_type, "text/plain");
             beast::ostream(response.body())
@@ -94,48 +94,20 @@ namespace http_servers
 
     void HTTPConnection::createResponse()
     {
-        if (request.target() == "/count")
-        {
-            response.set(http::field::content_type, "text/html");
-            beast::ostream(response.body())
-                << "<html>\n"
-                << "<head><title>Request count</title></head>\n"
-                << "<body>\n"
-                << "<h1>Request count</h1>\n"
-                << "<p>There have been "
-                << my_program_state::request_count()
-                << " requests so far.</p>\n"
-                << "</body>\n"
-                << "</html>\n";
-        }
-        else if (request.target() == "/time")
-        {
-            response.set(http::field::content_type, "text/html");
-            beast::ostream(response.body())
-                << "<html>\n"
-                << "<head><title>Current time</title></head>\n"
-                << "<body>\n"
-                << "<h1>Current time</h1>\n"
-                << "<p>The current time is "
-                << my_program_state::now()
-                << " seconds since the epoch.</p>\n"
-                << "</body>\n"
-                << "</html>\n";
-        }
-        else if (request.method() == http::verb::post)
+        if (request.method() == http::verb::post)
         {
             response.set(http::field::content_type, "text/html");
             beast::ostream(response.body())
                 << "<html lang='en' class=''>\n"
-                << "<head>\n"
-                << "<meta charset='UTF-8'>\n"
-                << "<title>Search Engine</title>\n"
-                << "</head>\n"
-                << "<body>\n"
+                << "    <head>\n"
+                << "        <meta charset='UTF-8'>\n"
+                << "        <title>Search Engine</title>\n"
+                << "    </head>\n"
+                << "    <body>\n"
                 << html::mainPageStyle
                 << html::searchBar
-                << rankedListHtml
-                << "</body>\n"
+                << message
+                << "    </body>\n"
                 << "</html>\n";
         }
         else
@@ -143,14 +115,14 @@ namespace http_servers
             response.set(http::field::content_type, "text/html");
             beast::ostream(response.body()) 
                 << "<html lang='en' class=''>\n"
-                << "<head>\n"
-                << "<meta charset='UTF-8'>\n"
-                << "<title>Search Engine</title>\n"
-                << "</head>\n"
-                << "<body>\n"
+                << "    <head>\n"
+                << "        <meta charset='UTF-8'>\n"
+                << "        <title>Search Engine</title>\n"
+                << "    </head>\n"
+                << "    <body>\n"
                 << html::mainPageStyle
                 << html::searchBar
-                << "</body>\n"
+                << "    </body>\n"
                 << "</html>\n";
         }
     }
@@ -182,7 +154,7 @@ namespace http_servers
             {
                 if (!ec)
                 {
-                    // Close socket to cancel any outstanding operation.
+                    // Close socket to cancel any outstanding operation
                     self->socket.close(ec);
                 }
             });
@@ -194,37 +166,34 @@ namespace http_servers
         std::vector<std::string> searchRequestWords;
         searchQuery.erase(0, 2);
         boost::split(searchRequestWords, searchQuery, boost::is_any_of("+"));
-
-        for (const auto& word : searchRequestWords)
-        {
-            std::cout << word << " ";
-        }
-        std::cout << std::endl;
-
         return searchRequestWords;
     }
 
 
-    void  HTTPConnection::createRankedListHtml(std::vector<std::string> rankedPages)
+    std::string  HTTPConnection::createRankedListHtml(std::vector<std::string> rankedPages)
     {
-
-        if (rankedPages.size() != 0)
+        std::string result;
+        if (!rankedPages.empty()) 
         {
-            rankedListHtml = "<ol>\n";
-            for (const auto& link : rankedPages)
+            result += "<ol>\n";
+            for (const auto& link : rankedPages) 
             {
-                rankedListHtml += "<li><a href=\"";
-                rankedListHtml += link;
-                rankedListHtml += "\" target=\"_blank\">";
-                rankedListHtml += link;
-                rankedListHtml += "</a></li>\n";
+                result += "<li><a href=\"" + link + "\" target=\"_blank\">" + link + "</a></li>\n";
             }
-            rankedListHtml += "</ol>\n";
+            result += "</ol>\n";
         }
-        else
+        else 
         {
-            rankedListHtml += "<p style=\"color:White;\">Pages not found. Try another search request!</p>\n";
+            result += "<p>Pages not found. Try another search request!</p>\n";
         }
+
+        return result;
+    }
+
+
+    std::string HTTPConnection::createErrorMessageHtml(const std::string& err_message)
+    {
+        return "<p>" + err_message + "</p>\n";
     }
 
 

@@ -21,7 +21,6 @@ namespace crawlers
 		void crawlWebPage(std::string url, int pageLevel);
 		std::vector<std::string> findLinks(std::string const& htmlBody);
 		void crawl(const std::string& startUrl, int depth);
-		std::string downloadWebPage(const std::string& url); // FOR TEST
 
 	private:
 		std::mutex m;

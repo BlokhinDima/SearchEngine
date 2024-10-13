@@ -32,7 +32,9 @@ namespace crawlers
 			}
 		}
 
+		m.lock();
 		std::cout << "\nCrawling finished!\n";
+		m.unlock();
 	}
 
 
@@ -53,19 +55,22 @@ namespace crawlers
 
 	void Crawler::linksToAbsolute(std::string const& parentUrl, std::vector<std::string>& foundLinks)
 	{
-		std::smatch sm;
+		std::smatch matchResult;
+		std::regex  protocolRelativeRegex { "^[^/]+" };
+		std::regex  hostRelativeRegex{ "^[^/]+//[^/]+" };
+		std::regex  anchorLinkRegex{ "(?:[^/]+/)+[^/]+" };
 
 		for (auto& link : foundLinks)
 		{
 			if (link.find("//") == 0) // relatively to protocol
 			{
-				std::regex_search(parentUrl, sm, std::regex{ "^[^/]+" });
-				link = sm.str() + link;
+				std::regex_search(parentUrl, matchResult, protocolRelativeRegex);
+				link = matchResult.str() + link;
 			}
 			else if (link.find('/') == 0) // relatively to host name
 			{
-				std::regex_search(parentUrl, sm, std::regex{ "^[^/]+//[^/]+" });
-				link = sm.str() + link;
+				std::regex_search(parentUrl, matchResult, hostRelativeRegex);
+				link = matchResult.str() + link;
 			}
 			else if (link.find("../") == 0) // ralatively to parent directory
 			{
@@ -77,7 +82,7 @@ namespace crawlers
 				}
 				link = std::string{ parentUrl.begin(), parentUrl.begin() + ind + 1 } + std::string{ link.begin() + cnt * 3, link.end() };
 			}
-			else if (std::regex_match(link, std::regex{ "(?:[^/]+/)+[^/]+" }) || (link.find("#") == 0)) // anchor link
+			else if (std::regex_match(link, anchorLinkRegex) || (link.find("#") == 0)) // anchor link
 			{
 				link = " ";
 			}
@@ -91,6 +96,7 @@ namespace crawlers
 	{
 		const std::regex regexURL(R"!!(<\s*A\s+[^>]*href\s*=\s*"([^"]*)")!!", std::regex::icase);
 		std::vector<std::string> links;
+
 		std::copy(std::sregex_token_iterator(htmlBody.begin(), htmlBody.end(), regexURL, 1),
 			std::sregex_token_iterator(),
 			std::back_inserter(links));
@@ -125,12 +131,14 @@ namespace crawlers
 		indexer.indexPage(url, htmlText);
 		downloadedLinks.insert(url);
 		workingThreads--;
+
 		std::cout 
 			<< "Link crawled: " << url 
 			<< " Level: " << pageLevel 
 			<< " Working threads: " << workingThreads 
 			<< " Links to crawl: " << linksQueue.size() 
 			<< std::endl;
+
 		m.unlock();
 	}
 }
