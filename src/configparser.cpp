@@ -1,12 +1,14 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <memory>
+#include <stdexcept>
 
 #include "configparser.h"
 
 namespace config_parsers
 {
-    configs::Config* ConfigFileParser::parseConfigFile(const std::string& configFile)
+    std::unique_ptr<configs::Config> ConfigFileParser::createConfigFromFile(const std::string& configFile)
     {
         try
         {
@@ -17,6 +19,7 @@ namespace config_parsers
 
             if (!file.is_open())
             {
+                throw std::runtime_error("Could not open configuration file");
             }
 
             while (std::getline(file, line))
@@ -57,7 +60,7 @@ namespace config_parsers
     }
 
 
-    configs::Config* ConfigFileParser::createConfig(configData_t& configData)
+    std::unique_ptr<configs::Config> ConfigFileParser::createConfig(configData_t& configData)
     {
         configs::DatabaseSettings databaseSettings;
         databaseSettings.databaseHost = configData["database"]["host"];
@@ -66,13 +69,13 @@ namespace config_parsers
         databaseSettings.username = configData["database"]["username"];
         databaseSettings.password = configData["database"]["password"];
 
-        configs::EngineSettings engineSettings;
-        engineSettings.recursionDepth = configData["settings"]["recursiondepth"];
-        engineSettings.startPage = configData["settings"]["startpage"];
-        engineSettings.port = configData["settings"]["port"];
+        configs::SearchEngineSettings searchEngineSettings;
+        searchEngineSettings.recursionDepth = configData["settings"]["recursiondepth"];
+        searchEngineSettings.startPage = configData["settings"]["startpage"];
+        searchEngineSettings.port = configData["settings"]["port"];
 
-        configs::Config* config = new configs::Config();
-        config->setEngineSettings(engineSettings);
+        std::unique_ptr<configs::Config> config(new configs::Config());
+        config->setEngineSettings(searchEngineSettings);
         config->setDatabaseSettings(databaseSettings);
 
         return config;

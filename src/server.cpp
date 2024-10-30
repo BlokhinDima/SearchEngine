@@ -50,28 +50,16 @@ namespace http_servers
         }
         case http::verb::post:
         {
-            if (request.target() == "/error")
+            try
             {
-                message = createErrorMessageHtml(beast::buffers_to_string(request.body().data()));
+                auto searchQuery = boost::beast::buffers_to_string(request.body().data());
+                auto searchRequestWords = getSearchWords(searchQuery);
+                auto rankedPages = database.getRankedList(searchRequestWords);
+                message = createRankedListHtml(rankedPages);
             }
-            else
+            catch (const std::exception& e)
             {
-                try
-                {
-                    auto searchQuery = boost::beast::buffers_to_string(request.body().data());
-                    auto searchRequestWords = getSearchWords(searchQuery);
-
-                    m.lock();
-                    auto rankedPages = database.getRankedList(searchRequestWords);
-                    m.unlock();
-
-                    message = createRankedListHtml(rankedPages);
-                }
-                catch (const std::exception& e)
-                {
-                    m.unlock();
-                    message = createErrorMessageHtml(e.what());
-                }
+                message = createErrorMessageHtml(e.what());
             }
 
             createResponse();

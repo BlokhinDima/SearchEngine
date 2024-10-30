@@ -4,8 +4,6 @@ project(SearchEngine)
 
 set (CMAKE_CXX_STANDARD 17)
 
-set(EXECUTABLE ${PROJECT_NAME})
-
 set(INC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/inc")
 file(GLOB INC_FILES "${INC_DIR}/*.h")
 include_directories(${INC_DIR})
@@ -17,16 +15,12 @@ find_package(OpenSSL REQUIRED)
 
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/lib/boost_1_85_0")
 
+if (NOT TARGET pqxx)
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/lib/libpqxx-7.8.1" libpqxx_build)
-
-add_executable(${EXECUTABLE} ${SRC_FILES} "src/server.cpp" "inc/server.h")
+endif() 
 
 target_link_libraries(${EXECUTABLE} pqxx)
 target_link_libraries(${EXECUTABLE} OpenSSL::SSL)
 
-add_custom_command(
-        TARGET SearchEngine POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy
-                ${CMAKE_SOURCE_DIR}/config.ini
-                ${CMAKE_CURRENT_BINARY_DIR}/config.ini
-)
+add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/crawler")
+add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/server")

@@ -8,7 +8,6 @@
 #include <cstdlib>
 #include <ctime>
 #include <iostream>
-#include <memory>
 #include <string>
 
 #include "database.h"
@@ -29,7 +28,6 @@ namespace http_servers
 		void start();
 
 	private:
-		std::mutex m;
 		databases::SearchDatabase& database;
 		std::string message;
 		tcp::socket socket;

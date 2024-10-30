@@ -46,8 +46,7 @@ namespace crawlers
 
 		if (downloadedLinks.count(currentUrl) == 0)
 		{
-			std::thread* thread = new std::thread(&Crawler::crawlWebPage, this, currentUrl, pageLevel);
-			(*thread).detach();
+			std::thread(&Crawler::crawlWebPage, this, currentUrl, pageLevel).detach();
 			workingThreads++;
 		}
 	}

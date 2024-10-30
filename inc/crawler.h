@@ -1,5 +1,8 @@
 #pragma once
 
+#include <boost/beast/core.hpp>
+#include <boost/beast/http.hpp>
+
 #include <string>
 #include <vector>
 #include <regex>
@@ -18,11 +21,14 @@ namespace crawlers
 	{
 	public:
 		Crawler(indexers::Indexer& indexer) : indexer(indexer) {};
+		void crawl(const std::string& startUrl, int depth);
 		void crawlWebPage(std::string url, int pageLevel);
 		std::vector<std::string> findLinks(std::string const& htmlBody);
-		void crawl(const std::string& startUrl, int depth);
 
 	private:
+		tcp::socket* socket;
+		tcp::acceptor* acceptor;
+		tcp::endpoint* ep;
 		std::mutex m;
 		int workingThreads = 0;
 		const int maxThreads = 4;

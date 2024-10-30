@@ -15,7 +15,7 @@ namespace configs
 		std::string password;
 	};
 
-	struct EngineSettings
+	struct SearchEngineSettings
 	{
 		std::string startPage;
 		std::string recursionDepth;
@@ -27,13 +27,13 @@ namespace configs
 	public:
 		Config() {}
 		DatabaseSettings getDatabaseSettings() const { return databaseSettings; }
-		EngineSettings getEngineSettings() const { return engineSettings; }
+		SearchEngineSettings getSearchEngineSettings() const { return searchEngineSettings; }
 		void setDatabaseSettings(DatabaseSettings& databaseSettings) { this->databaseSettings = databaseSettings; }
-		void setEngineSettings(EngineSettings& engineSettings) { this->engineSettings = engineSettings; }
+		void setEngineSettings(SearchEngineSettings& engineSettings) { this->searchEngineSettings = engineSettings; }
 
 	private:
 		DatabaseSettings databaseSettings;
-		EngineSettings engineSettings;
+		SearchEngineSettings searchEngineSettings;
 	};
 }
 

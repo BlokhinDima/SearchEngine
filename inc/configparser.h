@@ -2,6 +2,8 @@
 
 #include <map>
 #include <string>
+#include <memory>
+
 #include "config.h"
 
 namespace config_parsers
@@ -12,10 +14,10 @@ namespace config_parsers
 	{
 	public:
 		ConfigFileParser() {}
-		configs::Config* parseConfigFile(const std::string& configFile);
+		std::unique_ptr<configs::Config> createConfigFromFile(const std::string& configFile);
 
 	private:
 		void processLine(std::string& line, std::string& configSection, configData_t& configData);
-		configs::Config* createConfig(configData_t& configData);
+		std::unique_ptr<configs::Config> createConfig(configData_t& configData);
 	};
 }
