@@ -1,6 +1,7 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/beast/http/string_body.hpp>
 #include <mutex>
+#include <iostream>
 
 #include "server.h"
 
@@ -54,8 +55,18 @@ namespace http_servers
             {
                 auto searchQuery = boost::beast::buffers_to_string(request.body().data());
                 auto searchRequestWords = getSearchWords(searchQuery);
-                auto rankedPages = database.getRankedList(searchRequestWords);
-                message = createRankedListHtml(rankedPages);
+
+                std::cout << searchRequestWords.size() << std::endl;
+
+                if (searchRequestWords.size() == 0)
+                {
+                    message = createErrorMessageHtml("Empty search request!");
+                }
+                else
+                {
+                    auto rankedPages = database.getRankedList(searchRequestWords);
+                    message = createRankedListHtml(rankedPages);
+                }
             }
             catch (const std::exception& e)
             {
@@ -101,7 +112,7 @@ namespace http_servers
         else
         {
             response.set(http::field::content_type, "text/html");
-            beast::ostream(response.body()) 
+            beast::ostream(response.body())
                 << "<html lang='en' class=''>\n"
                 << "    <head>\n"
                 << "        <meta charset='UTF-8'>\n"
@@ -153,7 +164,7 @@ namespace http_servers
     {
         std::vector<std::string> searchRequestWords;
         searchQuery.erase(0, 2);
-        boost::split(searchRequestWords, searchQuery, boost::is_any_of("+"));
+        boost::algorithm::split(searchRequestWords, searchQuery, boost::is_any_of("+"), boost::token_compress_on);
         return searchRequestWords;
     }
 

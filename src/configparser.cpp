@@ -19,7 +19,7 @@ namespace config_parsers
 
             if (!file.is_open())
             {
-                throw std::runtime_error("Could not open configuration file");
+                throw std::runtime_error("Could not open configuration file: " + configFile);
             }
 
             while (std::getline(file, line))
@@ -62,22 +62,51 @@ namespace config_parsers
 
     std::unique_ptr<configs::Config> ConfigFileParser::createConfig(configData_t& configData)
     {
-        configs::DatabaseSettings databaseSettings;
-        databaseSettings.databaseHost = configData["database"]["host"];
-        databaseSettings.databasePort = configData["database"]["port"];
-        databaseSettings.databaseName = configData["database"]["name"];
-        databaseSettings.username = configData["database"]["username"];
-        databaseSettings.password = configData["database"]["password"];
+        std::string section;
+        std::string parameter;
 
-        configs::SearchEngineSettings searchEngineSettings;
-        searchEngineSettings.recursionDepth = configData["settings"]["recursiondepth"];
-        searchEngineSettings.startPage = configData["settings"]["startpage"];
-        searchEngineSettings.port = configData["settings"]["port"];
+        try
+        {
+            configs::DatabaseSettings databaseSettings;
+            section = "database";
 
-        std::unique_ptr<configs::Config> config(new configs::Config());
-        config->setEngineSettings(searchEngineSettings);
-        config->setDatabaseSettings(databaseSettings);
+            parameter = "host";
+            databaseSettings.databaseHost = configData.at(section).at(parameter);
 
-        return config;
+            parameter = "port";
+            databaseSettings.databasePort = configData.at(section).at(parameter);
+
+            parameter = "name";
+            databaseSettings.databaseName = configData.at(section).at(parameter);
+
+            parameter = "username";
+            databaseSettings.username = configData.at(section).at(parameter);
+
+            parameter = "password";
+            databaseSettings.password = configData.at(section).at(parameter);
+
+            configs::SearchEngineSettings searchEngineSettings;
+            section = "settings";
+
+            parameter = "recursiondepth";
+            searchEngineSettings.recursionDepth = configData.at(section).at(parameter);
+
+            parameter = "startpage";
+            searchEngineSettings.startPage = configData.at(section).at(parameter);
+
+            parameter = "port";
+            searchEngineSettings.port = configData.at(section).at(parameter);
+
+            auto config = std::make_unique<configs::Config>();
+            config->setEngineSettings(searchEngineSettings);
+            config->setDatabaseSettings(databaseSettings);
+
+            return config;
+        }
+        catch (std::out_of_range)
+        {
+            throw std::runtime_error
+            ("Config section '" + section + "' or required parameter '" + parameter + "' is missing.");
+        }
     }
 }

@@ -30,14 +30,14 @@ int main()
 		indexers::Indexer indexer(database);
 		crawlers::Crawler crawler(indexer);
 		
-		std::cout << "Crawling started" << std::endl;
+		std::cout << "Crawling started ..." << std::endl;
 
 		auto searchEngineSettings = config->getSearchEngineSettings();
 		crawler.crawl(searchEngineSettings.startPage, stoi(searchEngineSettings.recursionDepth));
 	}
 	catch (const std::exception& e)
 	{
-		std::cout << "Crawler internal error: " << e.what() << std::endl;
+		std::cout << "Crawler error: " << e.what() << std::endl;
 		std::cin.get();
 	}
 }

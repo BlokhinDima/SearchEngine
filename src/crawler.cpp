@@ -106,38 +106,45 @@ namespace crawlers
 
 	void Crawler::crawlWebPage(std::string url, int pageLevel)
 	{
-		auto htmlText = downloader.loadWebPage(url);
-
-		if (pageLevel - 1 != 0)
+		try
 		{
-			auto foundedLinks = findLinks(htmlText);
-			linksToAbsolute(url, foundedLinks);
+			auto htmlText = downloader.loadWebPage(url);
 
-			m.lock();
-			std::cout << "Links added: " << foundedLinks.size() << std::endl;
-			m.unlock();
-
-			for (auto& link : foundedLinks)
+			if (pageLevel - 1 != 0)
 			{
-				if (downloadedLinks.count(link) == 0)
+				auto foundedLinks = findLinks(htmlText);
+				linksToAbsolute(url, foundedLinks);
+
+				m.lock();
+				std::cout << "Links added: " << foundedLinks.size() << std::endl;
+				m.unlock();
+
+				for (auto& link : foundedLinks)
 				{
-					linksQueue.push(queue_ts::linkLevelPair_t(link, pageLevel - 1));
+					if (downloadedLinks.count(link) == 0)
+					{
+						linksQueue.push(queue_ts::linkLevelPair_t(link, pageLevel - 1));
+					}
 				}
 			}
+
+			m.lock();
+			indexer.indexPage(url, htmlText);
+			downloadedLinks.insert(url);
+			workingThreads--;
+
+			std::cout
+				<< "Link crawled: " << url
+				<< " Level: " << pageLevel
+				<< " Working threads: " << workingThreads
+				<< " Links to crawl: " << linksQueue.size()
+				<< std::endl;
+
+			m.unlock();
 		}
-
-		m.lock();
-		indexer.indexPage(url, htmlText);
-		downloadedLinks.insert(url);
-		workingThreads--;
-
-		std::cout 
-			<< "Link crawled: " << url 
-			<< " Level: " << pageLevel 
-			<< " Working threads: " << workingThreads 
-			<< " Links to crawl: " << linksQueue.size() 
-			<< std::endl;
-
-		m.unlock();
+		catch (std::exception& e)
+		{
+			std::cout << "Error while crawling webpage: "  << url << " " << e.what() << std::endl;
+		}
 	}
 }
