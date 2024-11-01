@@ -15,6 +15,8 @@ namespace crawlers
 {
 	void Crawler::crawl(std::string startUrl, int depth)
 	{
+		if (depth <= 0) throw std::invalid_argument("Recursion depth parameter is negative!");
+
 		linksQueue.push({ startUrl, depth });
 
 		for (;;)
@@ -145,6 +147,7 @@ namespace crawlers
 		catch (std::exception& e)
 		{
 			std::cout << "Error while crawling webpage: "  << url << " " << e.what() << std::endl;
+			std::cin.get();
 		}
 	}
 }
