@@ -146,8 +146,10 @@ namespace crawlers
 		}
 		catch (std::exception& e)
 		{
-			std::cout << "Error while crawling webpage: "  << url << " " << e.what() << std::endl;
-			std::cin.get();
+			m.lock();
+			std::cout << "Error while crawling webpage: '"  << url << "' " << e.what() << std::endl;
+			workingThreads--;
+			m.unlock();
 		}
 	}
 }

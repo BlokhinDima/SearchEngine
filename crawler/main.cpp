@@ -33,6 +33,7 @@ int main()
 
 		auto& searchEngineSettings = config->getSearchEngineSettings();
 		crawler.crawl(searchEngineSettings.startPage, stoi(searchEngineSettings.recursionDepth));
+		std::cin.get();
 	}
 	catch (const std::exception& e)
 	{

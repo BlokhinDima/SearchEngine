@@ -7,7 +7,7 @@ namespace downloaders
 		std::smatch matchResult;
 		if (!std::regex_match(url, matchResult, regexURL)) 
 		{
-			return "";
+			throw std::domain_error("URL: '" + url + "' is not match HTTPS protocol format!");
 		}
 
 		const std::string host = matchResult[2].str();
