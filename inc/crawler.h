@@ -20,15 +20,15 @@ namespace crawlers
 	class Crawler
 	{
 	public:
-		Crawler(indexers::Indexer& indexer) : indexer(indexer) {};
-		void crawl(const std::string& startUrl, int depth);
+		Crawler(databases::SearchDatabase& database) : indexer(database) {}
+		void crawl(std::string startUrl, int depth);
 		void crawlWebPage(std::string url, int pageLevel);
 		std::vector<std::string> findLinks(std::string const& htmlBody);
 
 	private:
-		tcp::socket* socket;
-		tcp::acceptor* acceptor;
-		tcp::endpoint* ep;
+		tcp::socket* socket = nullptr;
+		tcp::acceptor* acceptor = nullptr;
+		tcp::endpoint* ep = nullptr;
 		std::mutex m;
 		int workingThreads = 0;
 		const int maxThreads = 4;
@@ -38,7 +38,7 @@ namespace crawlers
 		indexers::Indexer indexer;
 
 	private:
-		void createThread();
+		void startNewThread();
 		void linksToAbsolute(std::string const& parentUrl, std::vector<std::string>& foundLinks);
 	};
 }

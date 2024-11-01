@@ -10,29 +10,22 @@ namespace config_parsers
 {
     std::unique_ptr<configs::Config> ConfigFileParser::createConfigFromFile(const std::string& configFile)
     {
-        try
+        std::ifstream file(configFile);
+        config_parsers::configData_t configData;
+        std::string currentSection;
+        std::string line;
+
+        if (!file.is_open())
         {
-            std::ifstream file(configFile);
-            config_parsers::configData_t configData;
-            std::string currentSection;
-            std::string line;
-
-            if (!file.is_open())
-            {
-                throw std::runtime_error("Could not open configuration file: " + configFile);
-            }
-
-            while (std::getline(file, line))
-            {
-                processLine(line, currentSection, configData);
-            }
-
-            return createConfig(configData);
+            throw std::runtime_error("Could not open configuration file: " + configFile);
         }
-        catch (const std::exception& e)
+
+        while (std::getline(file, line))
         {
-            throw e;
+            processLine(line, currentSection, configData);
         }
+
+        return createConfig(configData);
     }
 
 
@@ -69,39 +62,37 @@ namespace config_parsers
         {
             configs::DatabaseSettings databaseSettings;
             section = "database";
+            const auto& databaseSection = configData.at(section);
 
             parameter = "host";
-            databaseSettings.databaseHost = configData.at(section).at(parameter);
+            databaseSettings.databaseHost = databaseSection.at(parameter);
 
             parameter = "port";
-            databaseSettings.databasePort = configData.at(section).at(parameter);
+            databaseSettings.databasePort = databaseSection.at(parameter);
 
             parameter = "name";
-            databaseSettings.databaseName = configData.at(section).at(parameter);
+            databaseSettings.databaseName = databaseSection.at(parameter);
 
             parameter = "username";
-            databaseSettings.username = configData.at(section).at(parameter);
+            databaseSettings.username = databaseSection.at(parameter);
 
             parameter = "password";
-            databaseSettings.password = configData.at(section).at(parameter);
+            databaseSettings.password = databaseSection.at(parameter);
 
             configs::SearchEngineSettings searchEngineSettings;
             section = "settings";
+            const auto& settingsSection = configData.at(section);
 
             parameter = "recursiondepth";
-            searchEngineSettings.recursionDepth = configData.at(section).at(parameter);
+            searchEngineSettings.recursionDepth = settingsSection.at(parameter);
 
             parameter = "startpage";
-            searchEngineSettings.startPage = configData.at(section).at(parameter);
+            searchEngineSettings.startPage = settingsSection.at(parameter);
 
             parameter = "port";
-            searchEngineSettings.port = configData.at(section).at(parameter);
+            searchEngineSettings.port = settingsSection.at(parameter);
 
-            auto config = std::make_unique<configs::Config>();
-            config->setEngineSettings(searchEngineSettings);
-            config->setDatabaseSettings(databaseSettings);
-
-            return config;
+            return std::make_unique<configs::Config>(databaseSettings, searchEngineSettings);
         }
         catch (std::out_of_range)
         {

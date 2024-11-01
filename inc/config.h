@@ -26,10 +26,11 @@ namespace configs
 	{
 	public:
 		Config() {}
-		DatabaseSettings getDatabaseSettings() const { return databaseSettings; }
-		SearchEngineSettings getSearchEngineSettings() const { return searchEngineSettings; }
-		void setDatabaseSettings(DatabaseSettings& databaseSettings) { this->databaseSettings = databaseSettings; }
-		void setEngineSettings(SearchEngineSettings& engineSettings) { this->searchEngineSettings = engineSettings; }
+		Config(DatabaseSettings databaseSettings, SearchEngineSettings searchEngineSettings) : databaseSettings(databaseSettings), searchEngineSettings(searchEngineSettings) {}
+		const DatabaseSettings& getDatabaseSettings() const { return databaseSettings; }
+		const SearchEngineSettings& getSearchEngineSettings() const { return searchEngineSettings; }
+		void setDatabaseSettings(DatabaseSettings NewDatabaseSettings) { databaseSettings = NewDatabaseSettings; }
+		void setEngineSettings(SearchEngineSettings NewEngineSettings) { searchEngineSettings = NewEngineSettings; }
 
 	private:
 		DatabaseSettings databaseSettings;

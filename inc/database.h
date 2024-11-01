@@ -29,9 +29,9 @@ namespace databases
 
 	private:
 		std::unique_ptr<pqxx::connection> conn;
+		const int rankPositionsLimit = 10;
 
 	private:
-		const int rankPositionsLimit = 10;
 		void createTables();
 		void createDocumentsTable();
 		void createWordsTable();

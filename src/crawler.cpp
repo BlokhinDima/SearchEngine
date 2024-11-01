@@ -13,9 +13,9 @@
 
 namespace crawlers
 {
-	void Crawler::crawl(const std::string& startUrl, int depth)
+	void Crawler::crawl(std::string startUrl, int depth)
 	{
-		linksQueue.push(queue_ts::linkLevelPair_t(startUrl, depth));
+		linksQueue.push({ startUrl, depth });
 
 		for (;;)
 		{
@@ -23,7 +23,7 @@ namespace crawlers
 			{
 				if (workingThreads < maxThreads)
 				{
-					createThread();
+					startNewThread();
 				}
 			}
 			else if (workingThreads == 0)
@@ -38,11 +38,11 @@ namespace crawlers
 	}
 
 
-	void Crawler::createThread()
+	void Crawler::startNewThread()
 	{
 		auto linkLevelPair = linksQueue.pop();
-		auto currentUrl = linkLevelPair.first;
-		auto pageLevel = linkLevelPair.second;
+		auto currentUrl = linkLevelPair.link;
+		auto pageLevel = linkLevelPair.level;
 
 		if (downloadedLinks.count(currentUrl) == 0)
 		{
@@ -123,7 +123,7 @@ namespace crawlers
 				{
 					if (downloadedLinks.count(link) == 0)
 					{
-						linksQueue.push(queue_ts::linkLevelPair_t(link, pageLevel - 1));
+						linksQueue.push({ link, pageLevel - 1 });
 					}
 				}
 			}

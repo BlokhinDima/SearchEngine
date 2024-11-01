@@ -2,22 +2,22 @@
 
 namespace queue_ts
 {
-	void LinksQueue::push(const linkLevelPair_t& linkLevelPair)
+	void LinksQueue::push(LinkLevel linkLevelPair)
 	{
 		std::lock_guard<std::mutex> guard(m);
 		q.push(linkLevelPair);
 	}
 
 
-	linkLevelPair_t LinksQueue::pop()
+	LinkLevel LinksQueue::pop()
 	{
 		std::lock_guard<std::mutex> guard(m);
 
-		if (q.size() == 0) 
+		if (q.empty()) 
 		{
-			return linkLevelPair_t("", 0);
+			return LinkLevel("", 0);
 		}
-		linkLevelPair_t linkLevelPair = q.front();
+		LinkLevel linkLevelPair = q.front();
 		q.pop();
 		return linkLevelPair;
 	}

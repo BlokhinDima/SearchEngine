@@ -19,7 +19,7 @@ int main()
 		std::cout << *config << std::endl;
 
 		databases::ConnectionData connectionData;
-		auto databaseConfig = config->getDatabaseSettings();
+		auto& databaseConfig = config->getDatabaseSettings();
 		connectionData.host = databaseConfig.databaseHost;
 		connectionData.port = databaseConfig.databasePort;
 		connectionData.databaseName = databaseConfig.databaseName;
@@ -27,12 +27,11 @@ int main()
 		connectionData.pass = databaseConfig.password;
 
 		databases::SearchDatabase database(connectionData);
-		indexers::Indexer indexer(database);
-		crawlers::Crawler crawler(indexer);
+		crawlers::Crawler crawler(database);
 		
-		std::cout << "Crawling started ..." << std::endl;
+		std::cout << "Starting Crawler..." << std::endl;
 
-		auto searchEngineSettings = config->getSearchEngineSettings();
+		auto& searchEngineSettings = config->getSearchEngineSettings();
 		crawler.crawl(searchEngineSettings.startPage, stoi(searchEngineSettings.recursionDepth));
 	}
 	catch (const std::exception& e)

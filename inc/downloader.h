@@ -24,12 +24,12 @@ namespace downloaders
 	{
 
 	public:
-		BoostBeastDownloader() {};
+		BoostBeastDownloader() {}
 		std::string loadWebPage(const std::string& url);
 
 	private:
 		net::io_context ioc{};
-		std::regex regexURL{ "^(?:(https)://)([^/]+)(/.*)?" };
+		const std::regex regexURL{ "^(?:(https)://)([^/]+)(/.*)?" };
 
 	private:
 		std::string load(const std::string& host, const std::string& port, const std::string& target);

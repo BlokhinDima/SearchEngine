@@ -54,16 +54,15 @@ namespace http_servers
             try
             {
                 auto searchQuery = boost::beast::buffers_to_string(request.body().data());
-                auto searchRequestWords = getSearchWords(searchQuery);
+                boost::trim(searchQuery);
 
-                std::cout << searchRequestWords.size() << std::endl;
-
-                if (searchRequestWords.size() == 0)
+                if (searchQuery == "q=")
                 {
                     message = createErrorMessageHtml("Empty search request!");
                 }
                 else
                 {
+                    auto searchRequestWords = getSearchWords(searchQuery);
                     auto rankedPages = database.getRankedList(searchRequestWords);
                     message = createRankedListHtml(rankedPages);
                 }
@@ -169,7 +168,7 @@ namespace http_servers
     }
 
 
-    std::string  HTTPConnection::createRankedListHtml(std::vector<std::string> rankedPages)
+    std::string HTTPConnection::createRankedListHtml(std::vector<std::string> rankedPages)
     {
         std::string result;
         if (!rankedPages.empty()) 
